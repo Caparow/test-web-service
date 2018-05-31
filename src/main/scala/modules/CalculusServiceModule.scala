@@ -1,7 +1,6 @@
 package modules
 
 import com.google.inject.AbstractModule
-import services.CalculusServiceImpl
 import services.calculus.{CalculusService, CalculusServiceImpl}
 
 class CalculusServiceModule extends AbstractModule {

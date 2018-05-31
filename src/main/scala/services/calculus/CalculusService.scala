@@ -1,9 +1,10 @@
 package services.calculus
 
+import services.web.CalculateRequest
 import utils.Maybe.Maybe
 
 trait CalculusService {
-  def getValue(id: Long): Maybe[Double]
+  def getValue(v1: Int): Maybe[Double]
 
-  def calculate(id: Long): Maybe[Boolean]
+  def calculate(calculateRequest: CalculateRequest): Maybe[Boolean]
 }

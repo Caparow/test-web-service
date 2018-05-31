@@ -7,7 +7,7 @@ import pureconfig.error.ConfigReaderFailures
 
 class ConfigLoader extends AbstractModule{
   override def configure(): Unit = {
-    val csvServiceConfig = loadConfig[CsvServiceConfig]("services.auth").right.get
+    val csvServiceConfig = loadConfig[CsvServiceConfig]("services.csv").right.get
     bind(classOf[CsvServiceConfig]).toInstance(csvServiceConfig)
   }
 }

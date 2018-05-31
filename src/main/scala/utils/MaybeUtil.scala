@@ -9,6 +9,7 @@ object Maybe {
 
   implicit def toMaybe[T](tryOption: Try[T]): Maybe[T] = tryOption match {
     case Success(res) => Good(res)
-    case Failure(t) => Bad(One(new ServiceException(t.getMessage)))
+    case Failure(t) => print(t)
+      Bad(One(new ServiceException(t.toString)))
   }
 }
