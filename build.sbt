@@ -22,6 +22,9 @@ libraryDependencies ++= Seq(
   //scalactic
   "org.scalactic" %% "scalactic" % "3.0.5",
 
+  //scala test
+  "org.scalatest" %% "scalatest" % "3.0.5" % "test",
+
   //pure config
   "com.github.pureconfig" %% "pureconfig" % "0.9.1"
 )

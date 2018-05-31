@@ -2,38 +2,54 @@ package services.csv
 
 import java.io.File
 
-import com.google.inject.{Inject, Singleton}
 import com.github.tototoshi.csv._
+import com.google.inject.Inject
 import config.CsvServiceConfig
+import org.scalactic.{Bad, Good, One}
 import utils.Maybe._
-import scala.util.Try
+import utils.ServiceException
 
-@Singleton
-class CsvServiceImpl @Inject()()(
-  config: CsvServiceConfig
-) extends CsvService {
+import scala.util.{Failure, Success, Try}
+
+class CsvServiceImpl @Inject()(config: CsvServiceConfig)
+  extends CsvService {
 
   private def readValueAt(id: Int, filename: String): Maybe[Double] = {
-    Try {
-      val fileReader: CSVReader = CSVReader.open(new File(filename))
-      val valueList = fileReader.all().head
+    readWholeFile(filename).flatMap { list =>
+      list.lift(id) match {
+        case Some(e) => Good(e)
+        case None => Bad(One(new ServiceException("Index out of bounds.")))
+      }
+    }
+  }
+
+  override def readWholeFile(filename: String): Maybe[List[Double]] = {
+    Try(CSVReader.open(new File(filename))).flatMap { fileReader =>
+      val listOpt = fileReader.all().headOption
       fileReader.close()
-      valueList(id).toDouble
+      listOpt.map(_.map(_.toDouble)) match {
+        case Some(e) => Success(e)
+        case None => Failure(new ServiceException("Empty file."))
+      }
+    }
+  }
+
+  override def writeToFile(l: List[Double], filename: String): Maybe[List[Double]] = synchronized {
+    Try(CSVWriter.open(new File(filename))).map {
+      fileWriter =>
+        fileWriter.writeAll(List(l))
+        fileWriter.close()
+        l
     }
   }
 
   private def writeValueTo(id: Int, value: Double, filename: String): Maybe[Double] = {
-    Try {
-      val fileReader: CSVReader = CSVReader.open(new File(filename))
-      val valueList = fileReader.all()
-      fileReader.close()
-      val newValueList = valueList.head.updated(id, value)
-
-      val fileWriter: CSVWriter = CSVWriter.open(new File(filename))
-      fileWriter.writeAll(List(newValueList))
-
-      fileWriter.close()
-      value
+    readWholeFile(filename).flatMap { list =>
+      if (list.length - 1 >= id) {
+        writeToFile(list.updated(id, value), filename).map(_ => value)
+      } else {
+        Bad(One(new ServiceException("Index out of bounds.")))
+      }
     }
   }
 

@@ -1,19 +1,18 @@
-import com.google.inject.{Guice, Inject, Singleton}
-import config.CsvServiceConfig
-import modules.{CalculusServiceModule, ConfigLoader, CsvServiceModule, WebServiceModule}
-import services.csv.{CsvService, CsvServiceImpl}
+import com.google.inject.Guice.createInjector
+import modules._
 import services.web.WebService
 
 
-object Main extends App  {
+object main extends App {
   override def main(args: Array[String]): Unit = {
-    val injector = Guice.createInjector(
+
+    val injector = createInjector(
       new CsvServiceModule,
       new ConfigLoader,
       new CalculusServiceModule,
-      new WebServiceModule
-    )
-    val c = injector.getInstance(classOf[WebService])
-    c.startApplication
+      new WebServiceModule)
+
+    val webService = injector.getInstance(classOf[WebService])
+    webService.startApplication()
   }
 }

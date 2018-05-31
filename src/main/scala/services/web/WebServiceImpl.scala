@@ -10,19 +10,19 @@ import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import config.WebServiceConfig
 import utils.CalculateXmlSupport
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.io.StdIn
 import scala.xml.NodeSeq
 
-@Singleton
-class WebServiceImpl @Inject()()(
-  calculusService: CalculusService
-) extends WebService
-  with CalculateXmlSupport {
+class WebServiceImpl @Inject()(calculusService: CalculusService,
+                               webServiceConfig: WebServiceConfig)
+  extends WebService
+    with CalculateXmlSupport {
 
-  implicit val system: ActorSystem = ActorSystem("my-system")
+  implicit val system: ActorSystem = ActorSystem("test-web-service")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
@@ -43,11 +43,11 @@ class WebServiceImpl @Inject()()(
       }
     }
 
-  val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(route, "localhost", 8080)
+  val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(route, webServiceConfig.interface, webServiceConfig.port)
 
 
   override def startApplication: Unit = {
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Server online at http://${webServiceConfig.interface}:${webServiceConfig.port}\nPress RETURN to stop...")
     StdIn.readLine()
     bindingFuture
       .flatMap(_.unbind())

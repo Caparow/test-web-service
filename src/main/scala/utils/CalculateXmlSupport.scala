@@ -1,14 +1,15 @@
 package utils
 
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
-import org.scalactic.{Bad, Good, One}
+import org.scalactic.{Bad, Good}
 import services.web.CalculateRequest
 import utils.Maybe.Maybe
 
 import scala.xml.NodeSeq
 
-trait CalculateXmlSupport extends ScalaXmlSupport {
-  implicit def maybeBoolToString(b: Maybe[Boolean]): Maybe[String] = b.map(bb => if(bb) "1" else "0")
+trait CalculateXmlSupport
+  extends ScalaXmlSupport {
+  implicit def maybeBoolToString(b: Maybe[Boolean]): Maybe[String] = b.map(bb => if (bb) "1" else "0")
 
   implicit def xmlToStr(n: NodeSeq): String = n.toString
 
@@ -23,7 +24,7 @@ trait CalculateXmlSupport extends ScalaXmlSupport {
       case Bad(t) =>
         <res>
           <message>{"Web Service Error"}</message>
-          <error>{t.map(_.toString).mkString(";")}</error>
+          <error>{t.map(_.getMessage).mkString(";")}</error>
         </res>
     }
   }
@@ -32,8 +33,8 @@ trait CalculateXmlSupport extends ScalaXmlSupport {
   implicit def calculateReqFromXml(xmlReq: NodeSeq): CalculateRequest = {
     CalculateRequest(
       (xmlReq \ "v2").text.toInt,
-    (xmlReq \ "v3").text.toInt,
-    (xmlReq \ "v4").text.toInt
+      (xmlReq \ "v3").text.toInt,
+      (xmlReq \ "v4").text.toInt
     )
   }
 
