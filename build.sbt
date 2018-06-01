@@ -12,6 +12,9 @@ libraryDependencies ++= Seq(
   //akka-xml-support
   "com.typesafe.akka" %% "akka-http-xml" % "10.1.1",
 
+  //akka-http-testkit
+  "com.typesafe.akka" %% "akka-http-testkit" % "10.1.1",
+
   //guice
   "com.google.inject" % "guice" % "4.1.0",
   "com.google.inject.extensions" % "guice-throwingproviders" % "4.1.0",

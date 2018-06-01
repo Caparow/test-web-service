@@ -9,9 +9,7 @@ import utils.Maybe.Maybe
 class CalculusServiceImpl @Inject()(csvService: CsvService)
   extends CalculusService {
 
-  private val threshold = 10
-
-  def adjustFile2Value(init: Double): (Boolean, Double) = {
+  private def adjustFile2Value(init: Double): (Boolean, Double) = {
     if (init < threshold) {
       (true, init + threshold)
     } else {
