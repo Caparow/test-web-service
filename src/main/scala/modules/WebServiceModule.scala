@@ -1,7 +1,6 @@
 package modules
 
 import com.google.inject.AbstractModule
-import services.WebServiceImpl
 import services.web.{WebService, WebServiceImpl}
 
 class WebServiceModule extends AbstractModule {

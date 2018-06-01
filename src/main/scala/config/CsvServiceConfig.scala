@@ -1,4 +1,5 @@
 package config
 
-case class CsvServiceConfig(file1: String,
+case class CsvServiceConfig(dir: String,
+                            file1: String,
                             file2: String)

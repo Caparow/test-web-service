@@ -1,5 +1,8 @@
 package services.web
 
+import akka.http.scaladsl.server.Route
+
 trait WebService {
-  def startApplication: Unit
+  val route: Route
+  def startApplication(): Unit
 }

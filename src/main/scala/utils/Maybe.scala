@@ -1,4 +1,5 @@
 package utils
+
 import org.scalactic._
 
 import scala.util.{Failure, Success, Try}
