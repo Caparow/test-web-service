@@ -1,24 +1,15 @@
 import com.google.inject.Guice.createInjector
 import config.CsvServiceConfig
 import modules.{CalculusServiceModule, ConfigLoader, CsvServiceModule}
+import org.scalactic.Good
 import org.scalatest._
 import services.calculus.CalculusService
 import services.csv.CsvService
 import services.web.CalculateRequest
 
-import scala.util.Random
-
 class CalculusServiceTest
   extends FlatSpec
     with RandomData {
-
-  def generateRequest(list1: List[Double], list2: List[Double]): (CalculateRequest, Boolean) ={
-    val v3 = Random.nextInt(list1.length)
-    val v4 = Random.nextInt(list2.length)
-    val v2 = Random.nextInt(calculusService.threshold + calculusService.threshold/2)
-    val req = CalculateRequest(v2,v3,v4)
-    (req, (list1(v3)+v2) < calculusService.threshold)
-  }
 
   private val injector = createInjector(
     new CsvServiceModule,
@@ -65,8 +56,8 @@ class CalculusServiceTest
         readList1 <- csvService.readWholeFile(config.dir + config.file1)
         readList2 <- csvService.readWholeFile(config.dir + config.file1)
       } {
-        val req = generateRequest(readList1, readList2)
-        val res = calculate(req._1)
+        val req = generateRequest(calculusService.threshold, readList1, readList2)
+        val res = calculate(Good(req._1))
         assert(res.isGood)
         assert(res.get == req._2)
       }
@@ -79,23 +70,23 @@ class CalculusServiceTest
     csvService.writeToFile(list1, config.dir + config.file1)
     csvService.writeToFile(list2, config.dir + config.file2)
     val req1 = CalculateRequest(10, 15, 6)
-    val res1 = calculate(req1)
+    val res1 = calculate(Good(req1))
     val req2 = CalculateRequest(10, 6, 15)
-    val res2 = calculate(req2)
+    val res2 = calculate(Good(req2))
     assert(res2.isBad)
     assert(res1.isBad)
   }
 
   it should "return error for empty files" in {
-    val list1 = fillList(10)
-    csvService.writeToFile(list1, config.dir + config.file1)
+    val list = fillList(10)
+    csvService.writeToFile(list, config.dir + config.file1)
     csvService.writeToFile(List.empty, config.dir + config.file2)
     val req1 = CalculateRequest(10, 6, 6)
-    val res1 = calculate(req1)
-    csvService.writeToFile(list1, config.dir + config.file2)
+    val res1 = calculate(Good(req1))
+    csvService.writeToFile(list, config.dir + config.file2)
     csvService.writeToFile(List.empty, config.dir + config.file1)
     val req2 = CalculateRequest(10, 6, 6)
-    val res2 = calculate(req2)
+    val res2 = calculate(Good(req2))
     assert(res2.isBad)
     assert(res1.isBad)
   }

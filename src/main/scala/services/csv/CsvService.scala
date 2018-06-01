@@ -7,7 +7,7 @@ trait CsvService {
 
   def readWholeFile(filename: String): Maybe[List[Double]]
 
-  def writeToFile(l: List[Double], filename: String): Maybe[List[Double]]
+  def writeToFile[t](l: List[t], filename: String): Maybe[List[t]]
 
   def readValueFromFile2(id: Int): Maybe[Double]
 

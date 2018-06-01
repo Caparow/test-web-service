@@ -8,5 +8,7 @@ trait CalculusService {
 
   def getValue(v1: Int): Maybe[Double]
 
-  def calculate(calculateRequest: CalculateRequest): Maybe[Boolean]
+  def calculate(calculateRequest: Maybe[CalculateRequest]): Maybe[Boolean]
+
+  def processValue(value: Double): Double
 }

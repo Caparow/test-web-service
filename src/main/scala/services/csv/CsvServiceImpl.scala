@@ -34,7 +34,7 @@ class CsvServiceImpl @Inject()(config: CsvServiceConfig)
     }
   }
 
-  override def writeToFile(l: List[Double], filename: String): Maybe[List[Double]] = synchronized {
+  override def writeToFile[t](l: List[t], filename: String): Maybe[List[t]] = synchronized {
     Try(CSVWriter.open(new File(filename))).map {
       fileWriter =>
         fileWriter.writeAll(List(l))

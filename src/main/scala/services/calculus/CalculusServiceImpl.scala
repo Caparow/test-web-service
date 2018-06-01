@@ -17,19 +17,23 @@ class CalculusServiceImpl @Inject()(csvService: CsvService)
     }
   }
 
-  override def calculate(calculateRequest: CalculateRequest): Maybe[Boolean] = {
-    csvService.readValueFromFile1(calculateRequest.v3).flatMap { value =>
-      val valueWithV2 = adjustFile2Value(value + calculateRequest.v2)
-      csvService.writeValueToFile2(calculateRequest.v4, valueWithV2._2).map(_ => valueWithV2._1)
+  override def processValue(value: Double): Double = {
+    if (value > threshold)
+      value - threshold
+    else
+      value
+  }
+
+  override def calculate(calculateRequest: Maybe[CalculateRequest]): Maybe[Boolean] = {
+    calculateRequest.flatMap { calculateRequest =>
+      csvService.readValueFromFile1(calculateRequest.v3).flatMap { value =>
+        val valueWithV2 = adjustFile2Value(value + calculateRequest.v2)
+        csvService.writeValueToFile2(calculateRequest.v4, valueWithV2._2).map(_ => valueWithV2._1)
+      }
     }
   }
 
   override def getValue(v1: Int): Maybe[Double] = {
-    csvService.readValueFromFile2(v1).map { value =>
-      if (value > threshold)
-        value - threshold
-      else
-        value
-    }
+    csvService.readValueFromFile2(v1).map(processValue)
   }
 }

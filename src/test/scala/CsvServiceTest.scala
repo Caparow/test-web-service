@@ -36,6 +36,11 @@ class CsvServiceTest
     assert(readWholeFile(config.dir + config.file1).isBad)
   }
 
+  it should "return error for corrupted values in file" in {
+    writeToFile(List("s"), config.dir + config.file1)
+    assert(readWholeFile(config.dir + config.file1).isBad)
+  }
+
   it should "return correct result for reading existed non empty file" in {
     val list = fillList(10)
     writeToFile(list, config.dir + config.file1)
