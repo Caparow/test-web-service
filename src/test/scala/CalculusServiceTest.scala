@@ -54,7 +54,7 @@ class CalculusServiceTest
     1 to 100 foreach { _ =>
       for {
         readList1 <- csvService.readWholeFile(config.dir + config.file1)
-        readList2 <- csvService.readWholeFile(config.dir + config.file1)
+        readList2 <- csvService.readWholeFile(config.dir + config.file2)
       } {
         val req = generateRequest(calculusService.threshold, readList1, readList2)
         val res = calculate(Good(req._1))
