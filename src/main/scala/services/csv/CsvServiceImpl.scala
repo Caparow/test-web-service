@@ -5,12 +5,14 @@ import java.io.File
 import com.github.tototoshi.csv._
 import com.google.inject.Inject
 import config.CsvServiceConfig
+import javax.inject.Singleton
 import org.scalactic.{Bad, Good, One}
 import utils.Maybe._
 import utils.ServiceException
 
 import scala.util.{Failure, Success, Try}
 
+@Singleton
 class CsvServiceImpl @Inject()(config: CsvServiceConfig)
   extends CsvService {
 
@@ -23,7 +25,7 @@ class CsvServiceImpl @Inject()(config: CsvServiceConfig)
     }
   }
 
-  override def readWholeFile(filename: String): Maybe[List[Double]] = {
+  override def readWholeFile(filename: String): Maybe[List[Double]] = synchronized {
     Try(CSVReader.open(new File(filename))).flatMap { fileReader =>
       val listOpt = fileReader.all().headOption
       fileReader.close()

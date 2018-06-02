@@ -1,22 +1,21 @@
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.stream.{OverflowStrategy, QueueOfferResult}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import com.google.inject.Guice.createInjector
 import config.CsvServiceConfig
 import modules.{CalculusServiceModule, ConfigLoader, CsvServiceModule, WebServiceModule}
 import org.scalactic.Good
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest
+import org.scalatest.{Assertion, FlatSpec, Matchers}
 import services.calculus.CalculusService
 import services.csv.CsvService
 import services.web.{CalculateRequest, WebService}
 import utils.CalculateXmlSupport
 
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.Random
 import scala.xml.NodeSeq
 
 class WebServiceTest
@@ -41,19 +40,6 @@ class WebServiceTest
 
   import webService._
 
-  def requestToXml(req: CalculateRequest): String = {
-    xmlToStr(<req>
-      <v2>{req.v2}</v2>
-      <v3>{req.v3}</v3>
-      <v4>{req.v4}</v4>
-    </req>)
-  }
-
-  def createRequest(req: CalculateRequest): HttpRequest = {
-    HttpRequest(HttpMethods.POST,
-      uri = "/rest/calc/",
-      entity = HttpEntity(ContentTypes.`text/xml(UTF-8)`, requestToXml(req)))
-  }
 
   "Web Service" should "response with error/bad status for invalid or not supported request" in {
     Get("/rest/calc/s") ~> Route.seal(route) ~> check {
@@ -67,6 +53,28 @@ class WebServiceTest
     }
     HttpRequest(HttpMethods.POST, uri = "/rest") ~> Route.seal(route) ~> check {
       status shouldEqual StatusCodes.NotFound
+    }
+  }
+
+  it should "handle few connections in time and response correctly for writing/reading file" in {
+    val client = new TestClient()
+    val listLength = 100
+    val list1 = fillList(listLength)
+    val list2 = fillList(listLength)
+    csvService.writeToFile(list1, config.dir + config.file1)
+    csvService.writeToFile(list2, config.dir + config.file2)
+
+    def sendReq(): Assertion = {
+      val readList1 = csvService.readWholeFile(config.dir + config.file1).get
+      val readList2 = csvService.readWholeFile(config.dir + config.file2).get
+      val req = generateRequest(calculusService.threshold, readList1, readList2)
+      Await.result(client.queueRequest(createRequest(req._1)).map { res =>
+        res.entity shouldEqual HttpEntity(ContentTypes.`text/xml(UTF-8)`, Good(req._2))
+      }, 3.seconds)
+    }
+
+    (1 to client.QueueSize).par.foreach { _ =>
+      sendReq()
     }
   }
 
@@ -115,26 +123,24 @@ class WebServiceTest
   it should "return correct XML error for out of bounds or empty files requests" in {
     val list1 = fillList(100)
     val list2 = fillList(100)
-    csvService.writeToFile(List.empty, config.dir + config.file1)
-    csvService.writeToFile(list2, config.dir + config.file2)
-    createRequest(generateRequest(calculusService.threshold, list1, list2)._1) ~> route ~> check {
-      responseFromXml(responseAs[NodeSeq]) shouldEqual errorMessage
+
+    def assertReq() = {
+      createRequest(CalculateRequest(1, 2, 2)) ~> route ~> check {
+        responseFromXml(responseAs[NodeSeq]) shouldEqual errorMessage
+      }
     }
-    csvService.writeToFile(list1, config.dir + config.file1)
-    csvService.writeToFile(List.empty, config.dir + config.file2)
-    createRequest(generateRequest(calculusService.threshold, list1, list2)._1) ~> route ~> check {
-      responseFromXml(responseAs[NodeSeq]) shouldEqual errorMessage
+
+    def checkOnList(list: List[Double]) = {
+      csvService.writeToFile(list, config.dir + config.file1)
+      csvService.writeToFile(list2, config.dir + config.file2)
+      assertReq()
+      csvService.writeToFile(list1, config.dir + config.file1)
+      csvService.writeToFile(list, config.dir + config.file2)
+      assertReq()
     }
-    csvService.writeToFile(list1, config.dir + config.file1)
-    csvService.writeToFile(List(1.0), config.dir + config.file2)
-    createRequest(CalculateRequest(1,2,2)) ~> route ~> check {
-      responseFromXml(responseAs[NodeSeq]) shouldEqual errorMessage
-    }
-    csvService.writeToFile(List(1.0), config.dir + config.file1)
-    csvService.writeToFile(list2, config.dir + config.file2)
-    createRequest(CalculateRequest(1,2,2)) ~> route ~> check {
-      responseFromXml(responseAs[NodeSeq]) shouldEqual errorMessage
-    }
+
+    checkOnList(List.empty)
+    checkOnList(List(1.0))
   }
 
 }
