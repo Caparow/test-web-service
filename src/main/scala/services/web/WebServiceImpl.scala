@@ -55,7 +55,6 @@ class WebServiceImpl @Inject()(calculusService: CalculusService,
 
   val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(route, webServiceConfig.interface, webServiceConfig.port)
 
-
   override def startApplication: Unit = {
     println(s"Server online at http://${webServiceConfig.interface}:${webServiceConfig.port}\nPress RETURN to stop...")
     StdIn.readLine()

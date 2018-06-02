@@ -6,7 +6,6 @@ import com.google.inject.Guice.createInjector
 import config.CsvServiceConfig
 import modules.{CalculusServiceModule, ConfigLoader, CsvServiceModule, WebServiceModule}
 import org.scalactic.Good
-import org.scalatest
 import org.scalatest.{Assertion, FlatSpec, Matchers}
 import services.calculus.CalculusService
 import services.csv.CsvService
@@ -15,7 +14,6 @@ import utils.CalculateXmlSupport
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.Random
 import scala.xml.NodeSeq
 
 class WebServiceTest
@@ -39,7 +37,6 @@ class WebServiceTest
   private val config = injector.getInstance(classOf[CsvServiceConfig])
 
   import webService._
-
 
   "Web Service" should "response with error/bad status for invalid or not supported request" in {
     Get("/rest/calc/s") ~> Route.seal(route) ~> check {
